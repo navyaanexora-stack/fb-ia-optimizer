@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Formula Bharat | Impact Attenuator Optimization System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;700;900&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg-primary: #050a0f;
+  --bg-secondary: #0a1520;
+  --bg-card: #0d1e2e;
+  --bg-card2: #0b1825;
+  --accent-blue: #00c8ff;
+  --accent-cyan: #00ffea;
+  --accent-green: #00ff87;
+  --accent-red: #ff3060;
+  --accent-yellow: #ffd600;
+  --accent-orange: #ff7c00;
+  --text-primary: #e8f4ff;
+  --text-secondary: #7eb8d4;
+  --text-muted: #3d6278;
+  --border: #1a3a52;
+  --border-bright: #00c8ff44;
+  --glow-blue: 0 0 20px #00c8ff44;
+  --glow-green: 0 0 20px #00ff8744;
+  --glow-red: 0 0 20px #ff306044;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ---- ANIMATED BG ---- */
+.bg-grid {
+  position: fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: gridPan 20s linear infinite;
+}
+@keyframes gridPan { 0%{background-position:0 0} 100%{background-position:40px 40px} }
+
+.bg-radial {
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background: radial-gradient(ellipse 80% 60% at 60% 40%, rgba(0,100,200,0.08) 0%, transparent 70%);
+}
+
+/* ---- LANDING PAGE ---- */
+#landing {
+  position:fixed; inset:0; z-index:100;
+  background: #020810;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  transition: opacity 0.8s ease, visibility 0.8s;
+}
+#landing.hidden { opacity:0; visibility:hidden; }
+
+.landing-logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(2rem,5vw,4rem);
+  font-weight:900;
+  letter-spacing:0.12em;
+  color: var(--text-primary);
+  text-align:center;
+  margin-bottom:0.2em;
+}
+.landing-logo span { color: var(--accent-blue); }
+.landing-sub {
+  font-family:'Rajdhani',sans-serif;
+  font-size:clamp(0.9rem,2vw,1.3rem);
+  color: var(--text-secondary);
+  letter-spacing:0.35em;
+  text-transform:uppercase;
+  margin-bottom:3rem;
+  text-align:center;
+}
+
+/* 3D Car SVG Landing */
+.car-container-landing {
+  position:relative; width:min(700px,90vw); height:min(340px,50vw);
+  margin-bottom:3rem;
+}
+.car-glow-ring {
+  position:absolute; bottom:-20px; left:50%; transform:translateX(-50%);
+  width:70%; height:30px;
+  background: radial-gradient(ellipse, rgba(0,200,255,0.35) 0%, transparent 70%);
+  filter:blur(8px);
+  animation: pulseGlow 2s ease-in-out infinite alternate;
+}
+@keyframes pulseGlow { 0%{opacity:0.4} 100%{opacity:1} }
+
+.car-svg-wrap {
+  width:100%; height:100%;
+  animation: carFloat 3s ease-in-out infinite alternate;
+  filter: drop-shadow(0 10px 40px rgba(0,200,255,0.3));
+}
+@keyframes carFloat { 0%{transform:translateY(0) rotateY(-5deg)} 100%{transform:translateY(-12px) rotateY(5deg)} }
+
+.launch-btn {
+  font-family:'Orbitron',sans-serif;
+  font-size:1rem; font-weight:700;
+  letter-spacing:0.25em;
+  text-transform:uppercase;
+  padding:1rem 3rem;
+  background: transparent;
+  border: 2px solid var(--accent-blue);
+  color: var(--accent-blue);
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+  transition: all 0.3s;
+}
+.launch-btn::before {
+  content:'';
+  position:absolute; inset:0;
+  background: var(--accent-blue);
+  transform:translateX(-110%);
+  transition: transform 0.3s ease;
+  z-index:-1;
+}
+.launch-btn:hover { color:#000; box-shadow: var(--glow-blue); }
+.launch-btn:hover::before { transform:translateX(0); }
+
+.landing-scan-line {
+  position:absolute; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+  top:0; animation: scanLine 3s linear infinite;
+  opacity:0.4;
+}
+@keyframes scanLine { 0%{top:-2px} 100%{top:100%} }
+
+/* ---- MAIN APP ---- */
+#app { position:relative; z-index:1; min-height:100vh; }
+
+/* ---- TOPBAR ---- */
+.topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 1.5rem;
+  height:58px;
+  background: rgba(5,10,20,0.95);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter:blur(10px);
+  position:sticky; top:0; z-index:50;
+}
+.topbar-logo {
+  display:flex; align-items:center; gap:0.75rem;
+}
+.logo-icon {
+  width:36px; height:36px;
+  background: linear-gradient(135deg, var(--accent-blue), #0055ff);
+  clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Orbitron',sans-serif; font-size:0.6rem; font-weight:900;
+  color:#000; letter-spacing:0;
+}
+.logo-text {
+  font-family:'Orbitron',sans-serif;
+  font-size:0.9rem; font-weight:700;
+  line-height:1.1; letter-spacing:0.1em;
+}
+.logo-text span { display:block; color:var(--accent-blue); font-size:0.6rem; letter-spacing:0.3em; }
+
+.topbar-center {
+  font-family:'Rajdhani',sans-serif;
+  font-size:1.1rem; font-weight:600;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:var(--text-secondary);
+  display:flex; align-items:center; gap:0.75rem;
+}
+.topbar-center::before, .topbar-center::after {
+  content:''; display:block; width:30px; height:1px;
+  background: linear-gradient(90deg, transparent, var(--accent-blue));
+}
+.topbar-center::after { background: linear-gradient(90deg, var(--accent-blue), transparent); }
+
+.status-pill {
+  display:flex; align-items:center; gap:0.5rem;
+  font-family:'Rajdhani',sans-serif; font-size:0.75rem;
+  letter-spacing:0.15em; text-transform:uppercase;
+  padding:0.3rem 0.8rem;
+  border:1px solid var(--border-bright);
+  border-radius:2px;
+  background: rgba(0,200,255,0.05);
+  color:var(--text-secondary);
+}
+.status-dot {
+  width:6px; height:6px; border-radius:50%;
+  background:var(--accent-green);
+  box-shadow: 0 0 8px var(--accent-green);
+  animation: blink 1.5s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ---- SIDEBAR ---- */
+.layout { display:flex; min-height:calc(100vh - 58px); }
+
+.sidebar {
+  width:64px; flex-shrink:0;
+  background: rgba(5,10,20,0.9);
+  border-right: 1px solid var(--border);
+  display:flex; flex-direction:column;
+  align-items:center; padding:1rem 0; gap:0.5rem;
+}
+.nav-item {
+  width:44px; height:44px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:3px;
+  cursor:pointer; border-radius:6px;
+  transition: all 0.2s;
+  color:var(--text-muted);
+  font-size:0.4rem; font-family:'Rajdhani',sans-serif;
+  letter-spacing:0.05em; text-transform:uppercase;
+}
+.nav-item:hover, .nav-item.active {
+  background: rgba(0,200,255,0.1);
+  color:var(--accent-blue);
+  border:1px solid var(--border-bright);
+}
+.nav-item svg { width:18px; height:18px; }
+
+/* ---- CONTENT ---- */
+.content { flex:1; padding:1.2rem; display:flex; flex-direction:column; gap:1.2rem; overflow:hidden; }
+
+/* ---- GRID ROWS ---- */
+.row { display:flex; gap:1.2rem; flex-wrap:wrap; }
+.col-left { flex:0 0 360px; display:flex; flex-direction:column; gap:1.2rem; }
+.col-mid { flex:1; min-width:280px; display:flex; flex-direction:column; gap:1.2rem; }
+.col-right { flex:0 0 380px; display:flex; flex-direction:column; gap:1.2rem; }
+
+/* ---- CARD ---- */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius:4px;
+  padding:1rem 1.1rem;
+  position:relative;
+  overflow:hidden;
+}
+.card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+  opacity:0.4;
+}
+.card-title {
+  font-family:'Rajdhani',sans-serif;
+  font-size:0.7rem; font-weight:600;
+  letter-spacing:0.3em; text-transform:uppercase;
+  color:var(--text-muted);
+  margin-bottom:0.85rem;
+  display:flex; align-items:center; gap:0.5rem;
+}
+.card-title svg { width:14px; height:14px; color:var(--accent-blue); }
+
+/* ---- INPUTS ---- */
+.input-row {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:0.55rem;
+}
+.input-label {
+  font-family:'Rajdhani',sans-serif;
+  font-size:0.8rem; font-weight:500;
+  color:var(--text-secondary);
+  flex:1;
+}
+.input-hint { font-size:0.65rem; color:var(--text-muted); margin-left:0.3rem; }
+.input-field {
+  width:90px;
+  background: var(--bg-secondary);
+  border:1px solid var(--border);
+  border-radius:2px;
+  padding:0.3rem 0.5rem;
+  font-family:'Rajdhani',sans-serif;
+  font-size:0.9rem; font-weight:600;
+  color:var(--text-primary);
+  text-align:right;
+  transition: border-color 0.2s;
+}
+.input-field:focus { outline:none; border-color:var(--accent-blue); box-shadow: 0 0 8px rgba(0,200,255,0.2); }
+.input-unit {
+  font-family:'Rajdhani',sans-serif; font-size:0.7rem;
+  color:var(--text-muted); margin-left:0.35rem; width:22px;
+}
+
+/* Sliders */
+.slider-row {
+  display:flex; align-items:center; gap:0.7rem;
+  margin-bottom:0.65rem;
+}
+.mat-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.slider-label {
+  font-family:'Rajdhani',sans-serif; font-size:0.78rem;
+  color:var(--text-secondary); flex:1;
+}
+.slider {
+  -webkit-appearance:none; appearance:none;
+  width:110px; height:4px;
+  background: var(--border);
+  border-radius:2px; outline:none;
+  cursor:pointer;
+}
+.slider::-webkit-slider-thumb {
+  -webkit-appearance:none;
+  width:14px; height:14px; border-radius:50%;
+  background:var(--accent-blue);
+  box-shadow:0 0 6px var(--accent-blue);
+  cursor:pointer;
+}
+.slider-val {
+  font-family:'Orbitron',sans-serif; font-size:0.75rem;
+  color:var(--text-primary); width:30px; text-align:right;
+}
+.slider-unit { font-family:'Rajdhani',sans-serif; font-size:0.65rem; color:var(--text-muted); }
+
+/* ---- RUN BUTTON ---- */
+.run-btn {
+  width:100%; padding:0.9rem;
+  font-family:'Orbitron',sans-serif; font-size:0.85rem; font-weight:700;
+  letter-spacing:0.25em; text-transform:uppercase;
+  background: linear-gradient(135deg, #003a70, #005cb0);
+  border: 1px solid var(--accent-blue);
+  color: var(--accent-blue);
+  cursor:pointer;
+  clip-path: polygon(16px 0%, 100% 0%, calc(100% - 16px) 100%, 0% 100%);
+  transition: all 0.3s;
+  position:relative; overflow:hidden;
+}
+.run-btn::after {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(135deg, var(--accent-blue), #0055ff);
+  opacity:0; transition:opacity 0.3s;
+}
+.run-btn:hover { color:#000; box-shadow:var(--glow-blue); }
+.run-btn:hover::after { opacity:1; }
+.run-btn span { position:relative; z-index:1; }
+.run-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+/* ---- RESULTS CARD ---- */
+.result-header {
+  display:flex; align-items:center; gap:0.6rem;
+  padding:0.6rem 0.8rem;
+  border-radius:3px; margin-bottom:0.9rem;
+  font-family:'Rajdhani',sans-serif; font-size:0.85rem; font-weight:600;
+  letter-spacing:0.1em;
+}
+.result-header.found { background:rgba(0,255,135,0.1); border:1px solid rgba(0,255,135,0.3); color:var(--accent-green); }
+.result-header.notfound { background:rgba(255,48,96,0.1); border:1px solid rgba(255,48,96,0.3); color:var(--accent-red); }
+.result-header.waiting { background:rgba(0,200,255,0.05); border:1px solid var(--border); color:var(--text-muted); }
+
+.result-grid {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:0.5rem 0.75rem;
+}
+.result-item {}
+.result-key {
+  font-family:'Rajdhani',sans-serif; font-size:0.65rem;
+  color:var(--text-muted); letter-spacing:0.1em; text-transform:uppercase;
+}
+.result-val {
+  font-family:'Orbitron',sans-serif; font-size:0.95rem; font-weight:700;
+  color:var(--text-primary);
+}
+.result-val.green { color:var(--accent-green); }
+.result-val.red { color:var(--accent-red); }
+.result-val.yellow { color:var(--accent-yellow); }
+.result-val.blue { color:var(--accent-blue); }
+
+.divider {
+  height:1px; background: var(--border); margin:0.7rem 0;
+}
+
+/* ---- CAR VIEWER ---- */
+.car-viewer-wrap {
+  position:relative; width:100%; padding-top:56%;
+  background: radial-gradient(ellipse at center, rgba(0,80,180,0.1) 0%, transparent 70%);
+  border:1px solid var(--border);
+  border-radius:4px; overflow:hidden;
+}
+.car-viewer-inner {
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.car-3d {
+  width:95%; height:95%;
+  animation: car3dFloat 3.5s ease-in-out infinite alternate;
+  filter: drop-shadow(0 8px 30px rgba(0,200,255,0.25));
+  transform-style: preserve-3d;
+}
+@keyframes car3dFloat {
+  0%{transform:translateY(0) perspective(800px) rotateY(-8deg) rotateX(3deg)}
+  100%{transform:translateY(-10px) perspective(800px) rotateY(8deg) rotateX(-2deg)}
+}
+.car-glow-base {
+  position:absolute; bottom:5%; left:50%; transform:translateX(-50%);
+  width:60%; height:20px;
+  background: radial-gradient(ellipse, rgba(0,200,255,0.4) 0%, transparent 70%);
+  filter:blur(6px);
+  animation:pulseGlow 2s ease-in-out infinite alternate;
+}
+
+/* Attenuator overlay */
+.ia-highlight {
+  position:absolute;
+  transition: filter 0.5s, opacity 0.5s;
+}
+
+/* ---- SAFETY STATUS ---- */
+.safety-badge {
+  display:flex; flex-direction:column; align-items:center;
+  padding:0.8rem;
+  border-radius:4px;
+  border:1px solid var(--border);
+  text-align:center;
+  font-family:'Orbitron',sans-serif;
+}
+.safety-badge.safe { background:rgba(0,255,135,0.07); border-color:rgba(0,255,135,0.4); }
+.safety-badge.risky { background:rgba(255,214,0,0.07); border-color:rgba(255,214,0,0.4); }
+.safety-badge.unsafe { background:rgba(255,48,96,0.07); border-color:rgba(255,48,96,0.4); }
+.safety-label {
+  font-size:1.5rem; font-weight:900; letter-spacing:0.2em;
+}
+.safety-label.safe { color:var(--accent-green); text-shadow:0 0 20px var(--accent-green); }
+.safety-label.risky { color:var(--accent-yellow); text-shadow:0 0 20px var(--accent-yellow); }
+.safety-label.unsafe { color:var(--accent-red); text-shadow:0 0 20px var(--accent-red); }
+.safety-sub { font-family:'Rajdhani',sans-serif; font-size:0.65rem; color:var(--text-muted); letter-spacing:0.2em; text-transform:uppercase; margin-top:0.2rem; }
+
+/* ---- GAUGES & CHARTS ---- */
+.charts-row {
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr));
+  gap:1.2rem;
+}
+.chart-card {
+  background:var(--bg-card); border:1px solid var(--border);
+  border-radius:4px; padding:0.9rem;
+  position:relative; overflow:hidden;
+}
+.chart-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+  opacity:0.3;
+}
+.chart-title {
+  font-family:'Rajdhani',sans-serif; font-size:0.65rem; font-weight:600;
+  letter-spacing:0.25em; text-transform:uppercase;
+  color:var(--text-muted); margin-bottom:0.6rem; text-align:center;
+}
+.chart-canvas-wrap { position:relative; width:100%; }
+
+/* Gauge */
+.gauge-wrap {
+  position:relative; width:150px; height:90px; margin:0 auto;
+}
+canvas.gauge-canvas { width:150px!important; height:90px!important; }
+
+.gauge-value {
+  position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+  font-family:'Orbitron',sans-serif; font-size:1.1rem; font-weight:700;
+  text-align:center; line-height:1;
+}
+.gauge-unit { font-size:0.55rem; color:var(--text-muted); display:block; }
+
+/* KPI strip */
+.kpi-strip {
+  display:flex; gap:0.8rem; flex-wrap:wrap;
+}
+.kpi {
+  flex:1; min-width:100px;
+  background:var(--bg-card2); border:1px solid var(--border);
+  border-radius:4px; padding:0.65rem 0.8rem;
+}
+.kpi-label {
+  font-family:'Rajdhani',sans-serif; font-size:0.6rem;
+  color:var(--text-muted); letter-spacing:0.15em; text-transform:uppercase;
+  margin-bottom:0.25rem;
+}
+.kpi-value {
+  font-family:'Orbitron',sans-serif; font-size:1.05rem; font-weight:700;
+  color:var(--text-primary);
+}
+.kpi-value.blue { color:var(--accent-blue); }
+.kpi-value.green { color:var(--accent-green); }
+.kpi-value.red { color:var(--accent-red); }
+.kpi-value.yellow { color:var(--accent-yellow); }
+.kpi-tag { font-family:'Rajdhani',sans-serif; font-size:0.65rem; color:var(--text-muted); }
+
+/* Progress bar */
+.prog-bar-wrap { margin-bottom:0.5rem; }
+.prog-bar-label {
+  display:flex; justify-content:space-between;
+  font-family:'Rajdhani',sans-serif; font-size:0.7rem;
+  color:var(--text-secondary); margin-bottom:0.25rem;
+}
+.prog-bar-bg {
+  height:6px; background:var(--border); border-radius:3px; overflow:hidden;
+}
+.prog-bar-fill {
+  height:100%; border-radius:3px;
+  transition:width 0.8s ease;
+}
+
+/* ---- LOADER ---- */
+.loader-overlay {
+  position:fixed; inset:0; z-index:200;
+  background:rgba(2,8,16,0.85);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  backdrop-filter:blur(4px);
+  opacity:0; visibility:hidden; transition:opacity 0.3s;
+}
+.loader-overlay.show { opacity:1; visibility:visible; }
+.loader-ring {
+  width:80px; height:80px;
+  border:3px solid var(--border);
+  border-top-color: var(--accent-blue);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+  margin-bottom:1.5rem;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+.loader-text {
+  font-family:'Orbitron',sans-serif; font-size:0.8rem;
+  color:var(--accent-blue); letter-spacing:0.25em;
+  animation:pulse 1s ease-in-out infinite alternate;
+}
+.loader-prog {
+  margin-top:1rem; font-family:'Rajdhani',sans-serif; font-size:0.75rem;
+  color:var(--text-muted); letter-spacing:0.1em;
+}
+@keyframes pulse { 0%{opacity:0.5} 100%{opacity:1} }
+
+/* ---- TOAST ---- */
+.toast {
+  position:fixed; bottom:2rem; right:2rem; z-index:300;
+  font-family:'Rajdhani',sans-serif; font-size:0.85rem;
+  padding:0.75rem 1.2rem;
+  background:var(--bg-card);
+  border:1px solid var(--accent-green);
+  color:var(--accent-green);
+  border-radius:3px;
+  transform:translateY(100px); opacity:0;
+  transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  letter-spacing:0.1em;
+}
+.toast.show { transform:translateY(0); opacity:1; }
+
+/* ---- BOTTOM STATUS BAR ---- */
+.statusbar {
+  position:fixed; bottom:0; left:0; right:0;
+  height:26px;
+  background:rgba(5,10,20,0.97);
+  border-top:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 1rem;
+  font-family:'Rajdhani',sans-serif; font-size:0.65rem;
+  color:var(--text-muted); letter-spacing:0.15em; text-transform:uppercase;
+  z-index:40;
+}
+.statusbar-left { display:flex; align-items:center; gap:0.5rem; }
+.sys-online { color:var(--accent-green); }
+
+/* ---- RESPONSIVE ---- */
+@media(max-width:1200px) {
+  .col-right { flex:0 0 100%; }
+  .row { flex-wrap:wrap; }
+}
+@media(max-width:768px) {
+  .col-left, .col-mid { flex:0 0 100%; }
+  .topbar-center { display:none; }
+  .sidebar { width:48px; }
+}
+
+/* ---- SCAN ANIMATION ---- */
+.scan-line {
+  position:fixed; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,200,255,0.15),transparent);
+  pointer-events:none; z-index:0;
+  animation:scanFull 6s linear infinite; top:0;
+}
+@keyframes scanFull { 0%{top:0} 100%{top:100vh} }
+
+/* ---- CORNER ACCENTS ---- */
+.corner-tl, .corner-br {
+  position:absolute; width:16px; height:16px;
+  pointer-events:none;
+}
+.corner-tl { top:0; left:0; border-top:2px solid var(--accent-blue); border-left:2px solid var(--accent-blue); }
+.corner-br { bottom:0; right:0; border-bottom:2px solid var(--accent-blue); border-right:2px solid var(--accent-blue); }
+
+/* tooltip */
+.tip {
+  display:inline-block; width:13px; height:13px; line-height:13px;
+  text-align:center; border-radius:50%;
+  background:var(--border); color:var(--text-muted);
+  font-size:0.6rem; cursor:default;
+  font-family:'Inter',sans-serif;
+}
+
+.material-bar {
+  height:100%; border-radius:2px; transition:width 0.8s ease;
+}
+</style>
+</head>
+<body>
+
+<!-- Background effects -->
+<div class="bg-grid"></div>
+<div class="bg-radial"></div>
+<div class="scan-line"></div>
+
+<!-- ==================== LANDING PAGE ==================== -->
+<div id="landing">
+  <div class="landing-scan-line"></div>
+  <div class="landing-logo">FORMULA <span>BHARAT</span></div>
+  <div class="landing-sub">Impact Attenuator Optimization System</div>
+
+  <!-- Landing Car SVG -->
+  <div class="car-container-landing">
+    <svg class="car-svg-wrap" viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" fill="none">
+      <!-- Shadow / glow base -->
+      <ellipse cx="350" cy="280" rx="280" ry="18" fill="rgba(0,200,255,0.15)" filter="url(#glow)"/>
+      <!-- Rear wing -->
+      <rect x="570" y="80" width="90" height="8" rx="2" fill="#1a3a5c" stroke="#00c8ff" stroke-width="0.8"/>
+      <rect x="580" y="88" width="4" height="28" rx="1" fill="#1a3a5c" stroke="#00c8ff" stroke-width="0.5"/>
+      <rect x="646" y="88" width="4" height="28" rx="1" fill="#1a3a5c" stroke="#00c8ff" stroke-width="0.5"/>
+      <!-- Main body -->
+      <path d="M80 175 L120 140 L180 125 L300 118 L380 115 L480 118 L560 130 L600 155 L610 190 L80 190 Z" fill="#0d1e2e" stroke="#1a3a52" stroke-width="1"/>
+      <!-- Carbon fiber body overlay -->
+      <path d="M80 175 L120 140 L180 125 L300 118 L380 115 L480 118 L560 130 L600 155 L610 190 L80 190 Z" fill="url(#carbon)" opacity="0.4"/>
+      <!-- Nose cone / attenuator -->
+      <path d="M80 175 L55 172 L45 178 L55 185 L80 190 Z" fill="#001428" stroke="#00c8ff" stroke-width="1.5"/>
+      <!-- Attenuator glow box -->
+      <rect id="ia-box" x="36" y="165" width="22" height="20" rx="2" fill="rgba(0,255,135,0.2)" stroke="#00ff87" stroke-width="1.5" filter="url(#glowGreen)"/>
+      <!-- Honeycomb pattern on IA -->
+      <path d="M42 170 l3-5 l3 5 l-3 5 Z" fill="#00ff87" opacity="0.6"/>
+      <path d="M48 170 l3-5 l3 5 l-3 5 Z" fill="#00ff87" opacity="0.4"/>
+      <path d="M45 175 l3-5 l3 5 l-3 5 Z" fill="#00ff87" opacity="0.5"/>
+      <!-- Cockpit -->
+      <ellipse cx="320" cy="118" rx="60" ry="22" fill="#071525" stroke="#00c8ff" stroke-width="1"/>
+      <!-- Windscreen -->
+      <path d="M270 120 Q320 100 370 120 Q320 112 270 120 Z" fill="rgba(0,200,255,0.15)" stroke="#00c8ff" stroke-width="0.5"/>
+      <!-- Front wing -->
+      <rect x="58" y="188" width="90" height="6" rx="2" fill="#0d1e2e" stroke="#00c8ff" stroke-width="0.8"/>
+      <rect x="50" y="192" width="105" height="4" rx="1" fill="#0d1e2e" stroke="#1a3a52"/>
+      <!-- Rear diffuser -->
+      <path d="M560 188 L610 188 L620 200 L555 200 Z" fill="#071525" stroke="#00c8ff" stroke-width="0.6"/>
+      <!-- Sidepods -->
+      <path d="M200 140 L450 135 L470 160 L185 165 Z" fill="#0a1825" stroke="#1a3a52"/>
+      <!-- Suspension arms (front) -->
+      <line x1="145" y1="190" x2="165" y2="215" stroke="#1a3a52" stroke-width="1.5"/>
+      <line x1="175" y1="190" x2="165" y2="215" stroke="#1a3a52" stroke-width="1.5"/>
+      <!-- Suspension arms (rear) -->
+      <line x1="530" y1="190" x2="520" y2="215" stroke="#1a3a52" stroke-width="1.5"/>
+      <line x1="555" y1="190" x2="520" y2="215" stroke="#1a3a52" stroke-width="1.5"/>
+      <!-- Front wheel -->
+      <ellipse cx="165" cy="218" rx="28" ry="28" fill="#0a1520" stroke="#1a3a52" stroke-width="2"/>
+      <ellipse cx="165" cy="218" rx="18" ry="18" fill="#050a0f" stroke="#00c8ff" stroke-width="1"/>
+      <ellipse cx="165" cy="218" rx="7" ry="7" fill="#071525" stroke="#00c8ff" stroke-width="1.5"/>
+      <!-- Rear wheel -->
+      <ellipse cx="522" cy="218" rx="32" ry="32" fill="#0a1520" stroke="#1a3a52" stroke-width="2"/>
+      <ellipse cx="522" cy="218" rx="22" ry="22" fill="#050a0f" stroke="#00c8ff" stroke-width="1"/>
+      <ellipse cx="522" cy="218" rx="9" ry="9" fill="#071525" stroke="#00c8ff" stroke-width="1.5"/>
+      <!-- Halo -->
+      <path d="M290 118 Q320 108 350 118" stroke="#00c8ff" stroke-width="2" fill="none" opacity="0.7"/>
+      <!-- Engine cover vents -->
+      <line x1="400" y1="130" x2="400" y2="145" stroke="#00c8ff" stroke-width="0.7" opacity="0.5"/>
+      <line x1="415" y1="128" x2="415" y2="143" stroke="#00c8ff" stroke-width="0.7" opacity="0.5"/>
+      <line x1="430" y1="128" x2="430" y2="143" stroke="#00c8ff" stroke-width="0.7" opacity="0.5"/>
+      <!-- Neon accent lines -->
+      <path d="M120 140 L560 130" stroke="#00c8ff" stroke-width="0.5" opacity="0.2"/>
+      <path d="M80 190 L610 190" stroke="#00c8ff" stroke-width="0.5" opacity="0.2"/>
+      <!-- Team number -->
+      <text x="320" y="160" font-family="Orbitron,sans-serif" font-size="20" fill="rgba(0,200,255,0.15)" text-anchor="middle" font-weight="900">FB07</text>
+      <defs>
+        <filter id="glow"><feGaussianBlur stdDeviation="6" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="glowGreen"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <pattern id="carbon" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+          <rect width="4" height="4" fill="rgba(0,200,255,0.05)"/>
+          <rect x="4" y="4" width="4" height="4" fill="rgba(0,200,255,0.05)"/>
+        </pattern>
+      </defs>
+    </svg>
+    <div class="car-glow-ring"></div>
+  </div>
+
+  <button class="launch-btn" onclick="launchDashboard()">▶ &nbsp; LAUNCH DASHBOARD</button>
+  <div style="margin-top:1.5rem;font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:var(--text-muted);letter-spacing:0.2em;text-align:center;">
+    DESIGN SMART &nbsp;·&nbsp; CRASH SAFE &nbsp;·&nbsp; BUILD CHAMPIONS
+  </div>
+</div>
+
+<!-- ==================== LOADER ==================== -->
+<div class="loader-overlay" id="loader">
+  <div class="loader-ring"></div>
+  <div class="loader-text">OPTIMIZING DESIGN</div>
+  <div class="loader-prog" id="loaderProg">Initializing search space...</div>
+</div>
+
+<!-- ==================== TOAST ==================== -->
+<div class="toast" id="toast"></div>
+
+<!-- ==================== MAIN APP ==================== -->
+<div id="app" style="display:none;">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="logo-icon">FB</div>
+      <div class="logo-text">FORMULA BHARAT<span>IMPACT ATTENUATOR SYSTEM</span></div>
+    </div>
+    <div class="topbar-center">Impact Attenuator Optimizer</div>
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <div class="status-pill"><div class="status-dot"></div>System Online</div>
+      <div class="status-pill" style="border-color:rgba(255,214,0,0.3);color:var(--accent-yellow);">v1.0.0</div>
+    </div>
+  </div>
+
+  <!-- LAYOUT -->
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="nav-item active" title="Dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        DASH
+      </div>
+      <div class="nav-item" title="Inputs" onclick="scrollToInputs()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        INPUT
+      </div>
+      <div class="nav-item" title="Results" onclick="scrollToResults()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        RESULT
+      </div>
+      <div class="nav-item" title="Materials">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg>
+        MAT
+      </div>
+      <div class="nav-item" title="Export" onclick="exportReport()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        REPORT
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content" style="padding-bottom:2.5rem;">
+
+      <!-- KPI STRIP -->
+      <div class="kpi-strip" id="kpiStrip">
+        <div class="kpi">
+          <div class="kpi-label">Target Energy</div>
+          <div class="kpi-value blue" id="kpiEnergy">12,000 J</div>
+          <div class="kpi-tag">Formula Bharat Req.</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Max Deceleration</div>
+          <div class="kpi-value yellow" id="kpiMaxG">40 g</div>
+          <div class="kpi-tag">Safety Limit</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Max Mass</div>
+          <div class="kpi-value" id="kpiMaxMass">5.0 kg</div>
+          <div class="kpi-tag">Constraint</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Optimization Score</div>
+          <div class="kpi-value green" id="kpiScore">—</div>
+          <div class="kpi-tag">Best Design</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Status</div>
+          <div class="kpi-value" id="kpiStatus" style="font-size:0.75rem;color:var(--text-muted);">AWAITING RUN</div>
+          <div class="kpi-tag">Optimizer</div>
+        </div>
+      </div>
+
+      <!-- MAIN ROW -->
+      <div class="row">
+
+        <!-- LEFT: INPUTS -->
+        <div class="col-left" id="inputsSection">
+
+          <!-- Vehicle Params -->
+          <div class="card">
+            <div class="corner-tl"></div>
+            <div class="corner-br"></div>
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M5.34 18.66l-1.41 1.41M2 12H1m22-0h-1M19.07 19.07l-1.41-1.41M5.34 5.34L3.93 3.93M18 12a6 6 0 1 1-12 0 6 6 0 0 1 12 0z"/></svg>
+              Vehicle &amp; Impact Parameters
+            </div>
+
+            <div class="input-row">
+              <span class="input-label">Vehicle Mass <span class="tip">?</span></span>
+              <input class="input-field" id="vehicleMass" type="number" value="300" min="100" max="600" step="10"/>
+              <span class="input-unit">kg</span>
+            </div>
+            <div class="input-row">
+              <span class="input-label">Target Energy <span class="tip">?</span></span>
+              <input class="input-field" id="targetEnergy" type="number" value="12000" min="5000" max="20000" step="500"/>
+              <span class="input-unit">J</span>
+            </div>
+            <div class="input-row">
+              <span class="input-label">Max Peak Decel.</span>
+              <input class="input-field" id="maxG" type="number" value="40" min="20" max="80" step="1"/>
+              <span class="input-unit">g</span>
+            </div>
+            <div class="input-row">
+              <span class="input-label">Max Mass</span>
+              <input class="input-field" id="maxMass" type="number" value="5.0" min="1" max="10" step="0.5"/>
+              <span class="input-unit">kg</span>
+            </div>
+            <div class="input-row">
+              <span class="input-label">Crush Efficiency <span class="tip">?</span></span>
+              <input class="input-field" id="crushEff" type="number" value="0.80" min="0.5" max="1.0" step="0.01"/>
+              <span class="input-unit">—</span>
+            </div>
+            <div class="input-row">
+              <span class="input-label">Peak Factor</span>
+              <input class="input-field" id="peakFactor" type="number" value="1.35" min="1.0" max="2.0" step="0.05"/>
+              <span class="input-unit">—</span>
+            </div>
+            <div class="input-row">
+              <span class="input-label">Target SEA</span>
+              <input class="input-field" id="targetSEA" type="number" value="10.0" min="1" max="30" step="0.5"/>
+              <span class="input-unit">kJ/kg</span>
+            </div>
+          </div>
+
+          <!-- Material Thicknesses -->
+          <div class="card">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="4" rx="1"/><rect x="2" y="10" width="20" height="4" rx="1"/><rect x="2" y="17" width="20" height="4" rx="1"/></svg>
+              Material Thicknesses (mm)
+            </div>
+            <div class="slider-row">
+              <div class="mat-dot" style="background:#00c8ff;box-shadow:0 0 5px #00c8ff"></div>
+              <span class="slider-label">CFRP (Face)</span>
+              <input class="slider" type="range" id="slCFRP" min="10" max="40" step="10" value="20" oninput="updateSlider('CFRP',this.value)"/>
+              <span class="slider-val" id="valCFRP">20</span>
+              <span class="slider-unit">mm</span>
+            </div>
+            <div class="slider-row">
+              <div class="mat-dot" style="background:#00ff87;box-shadow:0 0 5px #00ff87"></div>
+              <span class="slider-label">Honeycomb Core</span>
+              <input class="slider" type="range" id="slHoney" min="40" max="140" step="10" value="90" oninput="updateSlider('Honey',this.value)"/>
+              <span class="slider-val" id="valHoney">90</span>
+              <span class="slider-unit">mm</span>
+            </div>
+            <div class="slider-row">
+              <div class="mat-dot" style="background:#ffd600;box-shadow:0 0 5px #ffd600"></div>
+              <span class="slider-label">Aluminium Foam</span>
+              <input class="slider" type="range" id="slAlFoam" min="20" max="80" step="10" value="50" oninput="updateSlider('AlFoam',this.value)"/>
+              <span class="slider-val" id="valAlFoam">50</span>
+              <span class="slider-unit">mm</span>
+            </div>
+            <div class="slider-row">
+              <div class="mat-dot" style="background:#bf5af2;box-shadow:0 0 5px #bf5af2"></div>
+              <span class="slider-label">PU Foam</span>
+              <input class="slider" type="range" id="slPUFoam" min="20" max="80" step="10" value="40" oninput="updateSlider('PUFoam',this.value)"/>
+              <span class="slider-val" id="valPUFoam">40</span>
+              <span class="slider-unit">mm</span>
+            </div>
+
+            <div class="divider"></div>
+            <div class="card-title" style="margin-top:0.2rem;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/></svg>
+              Geometry (mm)
+            </div>
+            <div style="display:flex;gap:1rem;">
+              <div class="input-row" style="flex:1;margin-bottom:0;">
+                <span class="input-label" style="flex:0 0 auto;margin-right:0.5rem;">Width</span>
+                <input class="input-field" id="geoWidth" type="number" value="200" min="150" max="250" step="10" style="width:70px;"/>
+              </div>
+              <div class="input-row" style="flex:1;margin-bottom:0;">
+                <span class="input-label" style="flex:0 0 auto;margin-right:0.5rem;">Height</span>
+                <input class="input-field" id="geoHeight" type="number" value="150" min="100" max="200" step="10" style="width:70px;"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- RUN BUTTON -->
+          <button class="run-btn" id="runBtn" onclick="runOptimization()">
+            <span>⚡ &nbsp; RUN OPTIMIZATION</span>
+          </button>
+
+          <!-- Material DB reference -->
+          <div class="card" style="padding:0.7rem 1rem;">
+            <div class="card-title">Material Database</div>
+            <table style="width:100%;border-collapse:collapse;font-family:'Rajdhani',sans-serif;font-size:0.75rem;">
+              <tr style="color:var(--text-muted);border-bottom:1px solid var(--border);">
+                <th style="text-align:left;padding:0.2rem 0;font-weight:500;">Material</th>
+                <th style="text-align:right;padding:0.2rem 0;font-weight:500;">ρ (kg/m³)</th>
+                <th style="text-align:right;padding:0.2rem 0;font-weight:500;">SEA (kJ/kg)</th>
+              </tr>
+              <tr style="color:var(--accent-blue);">
+                <td style="padding:0.2rem 0;">CFRP</td><td style="text-align:right;">1600</td><td style="text-align:right;">1.15</td>
+              </tr>
+              <tr style="color:var(--accent-green);">
+                <td style="padding:0.2rem 0;">Honeycomb</td><td style="text-align:right;">80</td><td style="text-align:right;">26.30</td>
+              </tr>
+              <tr style="color:var(--accent-yellow);">
+                <td style="padding:0.2rem 0;">Al Foam</td><td style="text-align:right;">450</td><td style="text-align:right;">4.77</td>
+              </tr>
+              <tr style="color:#bf5af2;">
+                <td style="padding:0.2rem 0;">PU Foam</td><td style="text-align:right;">120</td><td style="text-align:right;">9.20</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- MID: RESULTS -->
+        <div class="col-mid" id="resultsSection">
+
+          <!-- Result Header -->
+          <div class="card">
+            <div class="corner-tl"></div>
+            <div class="corner-br"></div>
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Optimum Feasible Design
+            </div>
+
+            <div class="result-header waiting" id="resultHeader">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Awaiting Optimization Run
+            </div>
+
+            <div class="result-grid" id="resultGrid">
+              <div class="result-item"><div class="result-key">CFRP Thickness</div><div class="result-val" id="rCFRP">— mm</div></div>
+              <div class="result-item"><div class="result-key">Honeycomb Thick.</div><div class="result-val" id="rHoney">— mm</div></div>
+              <div class="result-item"><div class="result-key">Al Foam Thick.</div><div class="result-val" id="rAlFoam">— mm</div></div>
+              <div class="result-item"><div class="result-key">PU Foam Thick.</div><div class="result-val" id="rPUFoam">— mm</div></div>
+              <div class="result-item"><div class="result-key">Width</div><div class="result-val" id="rWidth">— mm</div></div>
+              <div class="result-item"><div class="result-key">Height</div><div class="result-val" id="rHeight">— mm</div></div>
+              <div class="result-item"><div class="result-key">Total Thickness</div><div class="result-val blue" id="rTotalThick">— mm</div></div>
+              <div class="result-item"><div class="result-key">Total Mass</div><div class="result-val" id="rMass">— kg</div></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="result-grid">
+              <div class="result-item"><div class="result-key">Total Energy</div><div class="result-val blue" id="rEnergy">— J</div></div>
+              <div class="result-item"><div class="result-key">Overall SEA</div><div class="result-val" id="rSEA">— kJ/kg</div></div>
+              <div class="result-item"><div class="result-key">Peak Force</div><div class="result-val" id="rForce">— N</div></div>
+              <div class="result-item"><div class="result-key">Peak Decel.</div><div class="result-val" id="rG">— g</div></div>
+              <div class="result-item"><div class="result-key">Safety Factor</div><div class="result-val" id="rSafety">—</div></div>
+              <div class="result-item"><div class="result-key">Optim. Score</div><div class="result-val green" id="rScore">—</div></div>
+            </div>
+          </div>
+
+          <!-- Constraint checks -->
+          <div class="card">
+            <div class="card-title">Constraint Verification</div>
+            <div id="constraintBars">
+              <div class="prog-bar-wrap">
+                <div class="prog-bar-label"><span>Mass Constraint</span><span id="pbMassLabel">— / 5.0 kg</span></div>
+                <div class="prog-bar-bg"><div class="prog-bar-fill material-bar" id="pbMass" style="width:0%;background:var(--accent-blue)"></div></div>
+              </div>
+              <div class="prog-bar-wrap">
+                <div class="prog-bar-label"><span>Deceleration Limit</span><span id="pbGLabel">— / 40 g</span></div>
+                <div class="prog-bar-bg"><div class="prog-bar-fill material-bar" id="pbG" style="width:0%;background:var(--accent-blue)"></div></div>
+              </div>
+              <div class="prog-bar-wrap">
+                <div class="prog-bar-label"><span>Energy Absorbed</span><span id="pbELabel">— / 12000 J</span></div>
+                <div class="prog-bar-bg"><div class="prog-bar-fill material-bar" id="pbE" style="width:0%;background:var(--accent-green)"></div></div>
+              </div>
+              <div class="prog-bar-wrap">
+                <div class="prog-bar-label"><span>SEA Achievement</span><span id="pbSEALabel">— / 10 kJ/kg</span></div>
+                <div class="prog-bar-bg"><div class="prog-bar-fill material-bar" id="pbSEA" style="width:0%;background:var(--accent-cyan)"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Energy chart -->
+          <div class="chart-card">
+            <div class="chart-title">Energy Absorption</div>
+            <div class="chart-canvas-wrap" style="height:150px;">
+              <canvas id="energyChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Material contribution -->
+          <div class="chart-card">
+            <div class="chart-title">Material Contribution (Energy %)</div>
+            <div class="chart-canvas-wrap" style="height:180px;">
+              <canvas id="pieChart"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT: CAR + GAUGES -->
+        <div class="col-right">
+
+          <!-- 3D Car Viewer -->
+          <div class="card" style="padding:0.8rem;">
+            <div class="card-title">3D Vehicle Visualization</div>
+            <div class="car-viewer-wrap">
+              <div class="car-viewer-inner">
+                <svg class="car-3d" viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" fill="none">
+                  <ellipse cx="350" cy="282" rx="290" ry="14" fill="rgba(0,200,255,0.12)" filter="url(#glow2)"/>
+                  <rect x="568" y="78" width="92" height="9" rx="2" fill="#1a3a5c" stroke="#00c8ff" stroke-width="0.8"/>
+                  <rect x="578" y="87" width="4" height="30" rx="1" fill="#1a3a5c" stroke="#00c8ff" stroke-width="0.5"/>
+                  <rect x="648" y="87" width="4" height="30" rx="1" fill="#1a3a5c" stroke="#00c8ff" stroke-width="0.5"/>
+                  <path d="M78 176 L118 141 L178 126 L298 119 L378 116 L478 119 L558 131 L598 156 L608 191 L78 191 Z" fill="#0d1e2e" stroke="#1a3a52" stroke-width="1.2"/>
+                  <path d="M78 176 L118 141 L178 126 L298 119 L378 116 L478 119 L558 131 L598 156 L608 191 L78 191 Z" fill="url(#carbon2)" opacity="0.35"/>
+                  <path d="M78 176 L53 173 L43 179 L53 186 L78 191 Z" fill="#001428" stroke="#00c8ff" stroke-width="1.5"/>
+                  <!-- IA highlight box - changes color based on result -->
+                  <rect id="iaBox" x="34" y="166" width="24" height="20" rx="2" fill="rgba(0,200,255,0.15)" stroke="#00c8ff" stroke-width="1.5"/>
+                  <path d="M40 171 l3-5 l3 5 l-3 5 Z" fill="#00c8ff" opacity="0.5"/>
+                  <path d="M46 171 l3-5 l3 5 l-3 5 Z" fill="#00c8ff" opacity="0.35"/>
+                  <path d="M43 176 l3-5 l3 5 l-3 5 Z" fill="#00c8ff" opacity="0.4"/>
+                  <ellipse cx="318" cy="119" rx="62" ry="23" fill="#071525" stroke="#00c8ff" stroke-width="1"/>
+                  <path d="M268 121 Q318 101 368 121 Q318 113 268 121 Z" fill="rgba(0,200,255,0.12)" stroke="#00c8ff" stroke-width="0.5"/>
+                  <rect x="56" y="189" width="92" height="6" rx="2" fill="#0d1e2e" stroke="#00c8ff" stroke-width="0.8"/>
+                  <rect x="48" y="193" width="107" height="4" rx="1" fill="#0d1e2e" stroke="#1a3a52"/>
+                  <path d="M558 189 L608 189 L618 201 L553 201 Z" fill="#071525" stroke="#00c8ff" stroke-width="0.6"/>
+                  <path d="M198 141 L448 136 L468 161 L183 166 Z" fill="#0a1825" stroke="#1a3a52"/>
+                  <line x1="143" y1="191" x2="163" y2="218" stroke="#1a3a52" stroke-width="1.5"/>
+                  <line x1="173" y1="191" x2="163" y2="218" stroke="#1a3a52" stroke-width="1.5"/>
+                  <line x1="528" y1="191" x2="518" y2="220" stroke="#1a3a52" stroke-width="1.5"/>
+                  <line x1="553" y1="191" x2="518" y2="220" stroke="#1a3a52" stroke-width="1.5"/>
+                  <ellipse cx="163" cy="220" rx="29" ry="29" fill="#0a1520" stroke="#1a3a52" stroke-width="2"/>
+                  <ellipse cx="163" cy="220" rx="19" ry="19" fill="#050a0f" stroke="#00c8ff" stroke-width="1"/>
+                  <ellipse cx="163" cy="220" rx="8" ry="8" fill="#071525" stroke="#00c8ff" stroke-width="1.5"/>
+                  <ellipse cx="520" cy="220" rx="33" ry="33" fill="#0a1520" stroke="#1a3a52" stroke-width="2"/>
+                  <ellipse cx="520" cy="220" rx="23" ry="23" fill="#050a0f" stroke="#00c8ff" stroke-width="1"/>
+                  <ellipse cx="520" cy="220" rx="10" ry="10" fill="#071525" stroke="#00c8ff" stroke-width="1.5"/>
+                  <path d="M288 119 Q318 109 348 119" stroke="#00c8ff" stroke-width="2" fill="none" opacity="0.6"/>
+                  <line x1="398" y1="131" x2="398" y2="146" stroke="#00c8ff" stroke-width="0.7" opacity="0.4"/>
+                  <line x1="413" y1="129" x2="413" y2="144" stroke="#00c8ff" stroke-width="0.7" opacity="0.4"/>
+                  <line x1="428" y1="129" x2="428" y2="144" stroke="#00c8ff" stroke-width="0.7" opacity="0.4"/>
+                  <text x="318" y="162" font-family="Orbitron,sans-serif" font-size="18" fill="rgba(0,200,255,0.12)" text-anchor="middle" font-weight="900">FB07</text>
+                  <defs>
+                    <filter id="glow2"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                    <pattern id="carbon2" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+                      <rect width="4" height="4" fill="rgba(0,200,255,0.04)"/>
+                      <rect x="4" y="4" width="4" height="4" fill="rgba(0,200,255,0.04)"/>
+                    </pattern>
+                  </defs>
+                </svg>
+                <div class="car-glow-base"></div>
+              </div>
+            </div>
+            <!-- Safety status badge -->
+            <div class="safety-badge" id="safetyBadge" style="margin-top:0.75rem;">
+              <div style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:var(--text-muted);letter-spacing:0.25em;text-transform:uppercase;margin-bottom:0.4rem;">Design Safety Status</div>
+              <div class="safety-label" id="safetyLabel" style="color:var(--text-muted);font-size:1.2rem;">PENDING</div>
+              <div class="safety-sub" id="safetySubLabel">Run optimization to evaluate</div>
+            </div>
+          </div>
+
+          <!-- Gauges row -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;">
+            <!-- Peak G Gauge -->
+            <div class="chart-card">
+              <div class="chart-title">Peak Deceleration (g)</div>
+              <div class="gauge-wrap">
+                <canvas id="gGauge" class="gauge-canvas" width="150" height="90"></canvas>
+                <div class="gauge-value" id="gGaugeVal" style="color:var(--text-muted);">—<span class="gauge-unit">g</span></div>
+              </div>
+              <div style="text-align:center;font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:var(--text-muted);margin-top:0.3rem;">Limit: 40 g</div>
+            </div>
+            <!-- Safety Factor Gauge -->
+            <div class="chart-card">
+              <div class="chart-title">Safety Factor</div>
+              <div class="gauge-wrap">
+                <canvas id="sfGauge" class="gauge-canvas" width="150" height="90"></canvas>
+                <div class="gauge-value" id="sfGaugeVal" style="color:var(--text-muted);">—<span class="gauge-unit">×</span></div>
+              </div>
+              <div style="text-align:center;font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:var(--text-muted);margin-top:0.3rem;">Target ≥ 1.0</div>
+            </div>
+          </div>
+
+          <!-- Thickness distribution chart -->
+          <div class="chart-card">
+            <div class="chart-title">Thickness Distribution (mm)</div>
+            <div class="chart-canvas-wrap" style="height:150px;">
+              <canvas id="thickChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Mass breakdown -->
+          <div class="chart-card">
+            <div class="chart-title">Mass Breakdown by Layer (g)</div>
+            <div class="chart-canvas-wrap" style="height:130px;">
+              <canvas id="massChart"></canvas>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="statusbar">
+    <div class="statusbar-left">
+      <div class="status-dot sys-online"></div>
+      <span class="sys-online">System Online</span>
+      &nbsp;·&nbsp; Formula Bharat Impact Attenuator Optimization System
+    </div>
+    <span>v1.0.0 &nbsp;—&nbsp; <span id="clockTick"></span></span>
+  </div>
+</div>
+
+<script>
+// ==================== LAUNCH ====================
+function launchDashboard() {
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('app').style.display = 'block';
+  initCharts();
+  startClock();
+}
+
+function startClock() {
+  function tick() {
+    const now = new Date();
+    document.getElementById('clockTick').textContent =
+      now.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+  tick(); setInterval(tick, 1000);
+}
+
+function scrollToInputs() { document.getElementById('inputsSection').scrollIntoView({behavior:'smooth'}); }
+function scrollToResults() { document.getElementById('resultsSection').scrollIntoView({behavior:'smooth'}); }
+
+// ==================== SLIDER ====================
+function updateSlider(id, val) {
+  document.getElementById('val' + id).textContent = val;
+}
+
+// ==================== MATERIAL DATA ====================
+const MATERIALS = [
+  {name:'CFRP',      density:1600, sea:1.15,  color:'#00c8ff'},
+  {name:'Honeycomb', density:80,   sea:26.30, color:'#00ff87'},
+  {name:'Al Foam',   density:450,  sea:4.77,  color:'#ffd600'},
+  {name:'PU Foam',   density:120,  sea:9.20,  color:'#bf5af2'},
+];
+
+// ==================== OPTIMIZER ====================
+// Exact port of the Python algorithm
+function optimizeDesign(params) {
+  const {vehicleMass, gravity, targetEnergy, targetSEA, maxMass, maxG, crushEff, peakFactor} = params;
+  let bestScore = -1e12, best = null;
+
+  for (let tc = 10; tc <= 40; tc += 10) {
+    for (let th = 40; th <= 140; th += 10) {
+      for (let tf = 20; tf <= 80; tf += 10) {
+        for (let tp = 20; tp <= 80; tp += 10) {
+          const totalThickness = tc + th + tf + tp;
+          for (let w = 150; w <= 250; w += 10) {
+            for (let h = 100; h <= 200; h += 10) {
+              const thicknesses = [tc, th, tf, tp];
+              let totalMass = 0, totalEnergy = 0;
+              const layerMass = [], layerEnergy = [];
+              for (let i = 0; i < 4; i++) {
+                const vol = w * h * thicknesses[i] / 1e9;
+                const m = vol * MATERIALS[i].density;
+                const e = m * MATERIALS[i].sea * 1000;
+                totalMass += m; totalEnergy += e;
+                layerMass.push(m); layerEnergy.push(e);
+              }
+              const overallSEA = totalEnergy / (1000 * totalMass);
+              const crushDist = (totalThickness / 1000) * crushEff;
+              const avgForce = totalEnergy / crushDist;
+              const peakForce = avgForce * peakFactor;
+              const peakGVal = peakForce / (vehicleMass * gravity);
+              const safetyFactor = maxG / peakGVal;
+
+              let score = 100;
+              score -= Math.abs(overallSEA - targetSEA) * 8;
+              score -= Math.abs(totalEnergy - targetEnergy) / 300;
+              score -= totalMass * 4;
+              score -= peakGVal;
+              if (totalMass <= maxMass) score += 20;
+              if (peakGVal <= maxG) score += 20;
+
+              if (score > bestScore) {
+                bestScore = score;
+                best = {tc, th, tf, tp, width:w, height:h,
+                  mass:totalMass, energy:totalEnergy, sea:overallSEA,
+                  force:peakForce, g:peakGVal, safety:safetyFactor,
+                  score, layerMass, layerEnergy};
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return best;
+}
+
+// ==================== CHARTS ====================
+let energyChart, pieChart, thickChart, massChart;
+let gGaugeCanvas, sfGaugeCanvas;
+
+function initCharts() {
+  Chart.defaults.color = '#3d6278';
+  Chart.defaults.borderColor = '#1a3a52';
+
+  // Energy bar chart
+  energyChart = new Chart(document.getElementById('energyChart'), {
+    type:'bar',
+    data:{
+      labels:['Absorbed','Target'],
+      datasets:[{
+        data:[0, 12000],
+        backgroundColor:['rgba(0,200,255,0.3)','rgba(0,255,135,0.15)'],
+        borderColor:['#00c8ff','#00ff87'],
+        borderWidth:1.5,
+        borderRadius:2,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw.toLocaleString()} J`}}},
+      scales:{
+        y:{grid:{color:'#1a3a5233'},ticks:{font:{family:'Rajdhani',size:10},color:'#3d6278',callback:v=>`${(v/1000).toFixed(0)}k J`}},
+        x:{grid:{display:false},ticks:{font:{family:'Rajdhani',size:10},color:'#3d6278'}}
+      }
+    }
+  });
+
+  // Pie chart
+  pieChart = new Chart(document.getElementById('pieChart'), {
+    type:'doughnut',
+    data:{
+      labels:['CFRP','Honeycomb','Al Foam','PU Foam'],
+      datasets:[{
+        data:[0,0,0,0],
+        backgroundColor:['rgba(0,200,255,0.5)','rgba(0,255,135,0.5)','rgba(255,214,0,0.5)','rgba(191,90,242,0.5)'],
+        borderColor:['#00c8ff','#00ff87','#ffd600','#bf5af2'],
+        borderWidth:1.5,
+        hoverOffset:4,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'60%',
+      plugins:{
+        legend:{position:'right',labels:{font:{family:'Rajdhani',size:11},color:'#7eb8d4',boxWidth:12,padding:8}},
+        tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw.toFixed(1)}%`}}
+      }
+    }
+  });
+
+  // Thickness bar
+  thickChart = new Chart(document.getElementById('thickChart'), {
+    type:'bar',
+    data:{
+      labels:['CFRP','Honeycomb','Al Foam','PU Foam'],
+      datasets:[{
+        data:[0,0,0,0],
+        backgroundColor:['rgba(0,200,255,0.4)','rgba(0,255,135,0.4)','rgba(255,214,0,0.4)','rgba(191,90,242,0.4)'],
+        borderColor:['#00c8ff','#00ff87','#ffd600','#bf5af2'],
+        borderWidth:1.5, borderRadius:2,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{grid:{color:'#1a3a5233'},ticks:{font:{family:'Rajdhani',size:10},color:'#3d6278',callback:v=>`${v}mm`}},
+        x:{grid:{display:false},ticks:{font:{family:'Rajdhani',size:10},color:'#3d6278'}}
+      }
+    }
+  });
+
+  // Mass bar
+  massChart = new Chart(document.getElementById('massChart'), {
+    type:'bar',
+    data:{
+      labels:['CFRP','Honeycomb','Al Foam','PU Foam'],
+      datasets:[{
+        data:[0,0,0,0],
+        backgroundColor:['rgba(0,200,255,0.3)','rgba(0,255,135,0.3)','rgba(255,214,0,0.3)','rgba(191,90,242,0.3)'],
+        borderColor:['#00c8ff','#00ff87','#ffd600','#bf5af2'],
+        borderWidth:1.5, borderRadius:2,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{grid:{color:'#1a3a5233'},ticks:{font:{family:'Rajdhani',size:10},color:'#3d6278',callback:v=>`${(v*1000).toFixed(0)}g`}},
+        x:{grid:{display:false},ticks:{font:{family:'Rajdhani',size:10},color:'#3d6278'}}
+      }
+    }
+  });
+
+  drawGauge('gGauge', 0, 80, 40, '#3d6278');
+  drawGauge('sfGauge', 0, 3, 1.5, '#3d6278');
+}
+
+function drawGauge(canvasId, value, max, midpoint, color) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  const W = 150, H = 90;
+  ctx.clearRect(0, 0, W, H);
+
+  const cx = W/2, cy = H - 8;
+  const r = 68;
+  const startA = Math.PI, endA = 0;
+
+  // BG arc
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, startA, endA);
+  ctx.lineWidth = 12; ctx.lineCap = 'round';
+  ctx.strokeStyle = '#1a3a52';
+  ctx.stroke();
+
+  // Value arc
+  const pct = Math.min(value/max, 1);
+  const valA = Math.PI + pct * Math.PI;
+  const grad = ctx.createLinearGradient(cx - r, cy, cx + r, cy);
+  grad.addColorStop(0, '#00ff87');
+  grad.addColorStop(0.5, '#ffd600');
+  grad.addColorStop(1, '#ff3060');
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, startA, valA);
+  ctx.lineWidth = 12; ctx.lineCap = 'round';
+  ctx.strokeStyle = grad;
+  ctx.stroke();
+
+  // Midpoint marker
+  const midA = Math.PI + (midpoint/max)*Math.PI;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 6, midA - 0.06, midA + 0.06);
+  ctx.lineWidth = 3; ctx.strokeStyle = '#ffffff44'; ctx.stroke();
+
+  // Needle
+  const needleA = Math.PI + pct * Math.PI;
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(needleA - Math.PI/2);
+  ctx.beginPath();
+  ctx.moveTo(0, 6); ctx.lineTo(-2, -r + 14); ctx.lineTo(2, -r + 14);
+  ctx.closePath(); ctx.fillStyle = color; ctx.fill();
+  ctx.restore();
+
+  // Center dot
+  ctx.beginPath();
+  ctx.arc(cx, cy, 5, 0, Math.PI*2);
+  ctx.fillStyle = '#1a3a52'; ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx, cy, 3, 0, Math.PI*2);
+  ctx.fillStyle = color; ctx.fill();
+}
+
+// ==================== RUN OPTIMIZATION ====================
+async function runOptimization() {
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  showLoader(true);
+
+  const params = {
+    vehicleMass: parseFloat(document.getElementById('vehicleMass').value) || 300,
+    gravity: 9.81,
+    targetEnergy: parseFloat(document.getElementById('targetEnergy').value) || 12000,
+    targetSEA: parseFloat(document.getElementById('targetSEA').value) || 10,
+    maxMass: parseFloat(document.getElementById('maxMass').value) || 5,
+    maxG: parseFloat(document.getElementById('maxG').value) || 40,
+    crushEff: parseFloat(document.getElementById('crushEff').value) || 0.80,
+    peakFactor: parseFloat(document.getElementById('peakFactor').value) || 1.35,
+  };
+
+  const msgs = [
+    'Initializing search space...',
+    'Iterating thickness combinations...',
+    'Computing energy absorption...',
+    'Evaluating safety constraints...',
+    'Scoring candidate designs...',
+    'Selecting optimum configuration...',
+  ];
+
+  let mi = 0;
+  const interval = setInterval(() => {
+    document.getElementById('loaderProg').textContent = msgs[mi % msgs.length];
+    mi++;
+  }, 300);
+
+  // Run in next tick to allow UI update
+  await new Promise(r => setTimeout(r, 50));
+  const best = optimizeDesign(params);
+  clearInterval(interval);
+
+  showLoader(false);
+  btn.disabled = false;
+
+  if (best) {
+    updateResults(best, params);
+    showToast('✓ Optimum design found successfully');
+  }
+}
+
+function showLoader(show) {
+  document.getElementById('loader').classList.toggle('show', show);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function updateResults(r, params) {
+  const safeG = r.g <= params.maxG;
+  const safeMass = r.mass <= params.maxMass;
+  const bothSafe = safeG && safeMass;
+  const risky = !bothSafe && (r.g <= params.maxG * 1.15);
+
+  // Header
+  const hdr = document.getElementById('resultHeader');
+  hdr.className = 'result-header ' + (bothSafe ? 'found' : risky ? 'found' : 'notfound');
+  hdr.innerHTML = bothSafe
+    ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> OPTIMAL DESIGN FOUND'
+    : risky ? '⚠ DESIGN NEAR LIMITS — REVIEW REQUIRED'
+    : '✗ CONSTRAINT VIOLATION — REDESIGN NEEDED';
+
+  // Result values
+  const gc = r.g <= params.maxG ? 'green' : 'red';
+  const mc = r.mass <= params.maxMass ? 'green' : 'red';
+  const sc = r.safety >= 1.0 ? 'green' : 'red';
+
+  document.getElementById('rCFRP').textContent = `${r.tc} mm`;
+  document.getElementById('rHoney').textContent = `${r.th} mm`;
+  document.getElementById('rAlFoam').textContent = `${r.tf} mm`;
+  document.getElementById('rPUFoam').textContent = `${r.tp} mm`;
+  document.getElementById('rWidth').textContent = `${r.width} mm`;
+  document.getElementById('rHeight').textContent = `${r.height} mm`;
+  document.getElementById('rTotalThick').textContent = `${r.tc+r.th+r.tf+r.tp} mm`;
+  document.getElementById('rMass').className = `result-val ${mc}`;
+  document.getElementById('rMass').textContent = `${r.mass.toFixed(3)} kg`;
+  document.getElementById('rEnergy').textContent = `${r.energy.toFixed(2)} J`;
+  document.getElementById('rSEA').textContent = `${r.sea.toFixed(2)} kJ/kg`;
+  document.getElementById('rForce').textContent = `${(r.force/1000).toFixed(2)} kN`;
+  document.getElementById('rG').className = `result-val ${gc}`;
+  document.getElementById('rG').textContent = `${r.g.toFixed(2)} g`;
+  document.getElementById('rSafety').className = `result-val ${sc}`;
+  document.getElementById('rSafety').textContent = r.safety.toFixed(2);
+  document.getElementById('rScore').textContent = r.score.toFixed(2);
+
+  // KPI strip
+  document.getElementById('kpiScore').textContent = r.score.toFixed(1);
+  document.getElementById('kpiEnergy').textContent = `${params.targetEnergy.toLocaleString()} J`;
+  document.getElementById('kpiMaxG').textContent = `${params.maxG} g`;
+  document.getElementById('kpiMaxMass').textContent = `${params.maxMass} kg`;
+  document.getElementById('kpiStatus').textContent = 'COMPLETED';
+  document.getElementById('kpiStatus').style.color = 'var(--accent-green)';
+
+  // Constraint bars
+  const massPct = Math.min((r.mass / params.maxMass) * 100, 100);
+  const gPct = Math.min((r.g / params.maxG) * 100, 100);
+  const ePct = Math.min((r.energy / params.targetEnergy) * 100, 100);
+  const seaPct = Math.min((r.sea / params.targetSEA) * 100, 100);
+
+  document.getElementById('pbMass').style.width = massPct + '%';
+  document.getElementById('pbMass').style.background = massPct > 100 ? 'var(--accent-red)' : massPct > 85 ? 'var(--accent-yellow)' : 'var(--accent-blue)';
+  document.getElementById('pbMassLabel').textContent = `${r.mass.toFixed(2)} / ${params.maxMass} kg`;
+
+  document.getElementById('pbG').style.width = gPct + '%';
+  document.getElementById('pbG').style.background = gPct > 100 ? 'var(--accent-red)' : gPct > 85 ? 'var(--accent-yellow)' : 'var(--accent-green)';
+  document.getElementById('pbGLabel').textContent = `${r.g.toFixed(1)} / ${params.maxG} g`;
+
+  document.getElementById('pbE').style.width = ePct + '%';
+  document.getElementById('pbELabel').textContent = `${r.energy.toFixed(0)} / ${params.targetEnergy} J`;
+
+  document.getElementById('pbSEA').style.width = seaPct + '%';
+  document.getElementById('pbSEALabel').textContent = `${r.sea.toFixed(2)} / ${params.targetSEA} kJ/kg`;
+
+  // Energy chart
+  energyChart.data.datasets[0].data = [r.energy, params.targetEnergy];
+  energyChart.data.datasets[0].backgroundColor[0] = r.energy >= params.targetEnergy ? 'rgba(0,255,135,0.4)' : 'rgba(255,214,0,0.35)';
+  energyChart.update();
+
+  // Pie chart - energy by material
+  const totalE = r.layerEnergy.reduce((a,b)=>a+b,0);
+  pieChart.data.datasets[0].data = r.layerEnergy.map(e => +((e/totalE)*100).toFixed(1));
+  pieChart.update();
+
+  // Thickness bar
+  thickChart.data.datasets[0].data = [r.tc, r.th, r.tf, r.tp];
+  thickChart.update();
+
+  // Mass bar (in kg)
+  massChart.data.datasets[0].data = r.layerMass;
+  massChart.update();
+
+  // Gauges
+  const gColor = r.g <= params.maxG ? '#00ff87' : '#ff3060';
+  const sfColor = r.safety >= 1.0 ? '#00ff87' : '#ff3060';
+  drawGauge('gGauge', r.g, params.maxG * 1.5, params.maxG, gColor);
+  drawGauge('sfGauge', Math.min(r.safety, 3), 3, 1.0, sfColor);
+  document.getElementById('gGaugeVal').innerHTML = `${r.g.toFixed(1)}<span class="gauge-unit" style="color:${gColor}">g</span>`;
+  document.getElementById('gGaugeVal').style.color = gColor;
+  document.getElementById('sfGaugeVal').innerHTML = `${r.safety.toFixed(2)}<span class="gauge-unit" style="color:${sfColor}">×</span>`;
+  document.getElementById('sfGaugeVal').style.color = sfColor;
+
+  // Safety badge
+  const badge = document.getElementById('safetyBadge');
+  const label = document.getElementById('safetyLabel');
+  const sub = document.getElementById('safetySubLabel');
+  if (bothSafe) {
+    badge.className = 'safety-badge safe';
+    label.className = 'safety-label safe'; label.textContent = 'SAFE';
+    sub.textContent = 'Within allowable limits';
+  } else if (risky) {
+    badge.className = 'safety-badge risky';
+    label.className = 'safety-label risky'; label.textContent = 'RISKY';
+    sub.textContent = 'Near safety limits — review';
+  } else {
+    badge.className = 'safety-badge unsafe';
+    label.className = 'safety-label unsafe'; label.textContent = 'UNSAFE';
+    sub.textContent = 'Constraint violated';
+  }
+
+  // IA box color
+  const iaColor = bothSafe ? '#00ff87' : risky ? '#ffd600' : '#ff3060';
+  const iaFill = bothSafe ? 'rgba(0,255,135,0.2)' : risky ? 'rgba(255,214,0,0.15)' : 'rgba(255,48,96,0.2)';
+  const iaBox = document.getElementById('iaBox');
+  if (iaBox) { iaBox.setAttribute('stroke', iaColor); iaBox.setAttribute('fill', iaFill); }
+}
+
+// ==================== EXPORT REPORT ====================
+function exportReport() {
+  const lines = [
+    '====================================================',
+    '     FORMULA BHARAT — IMPACT ATTENUATOR REPORT',
+    '====================================================',
+    `Generated: ${new Date().toLocaleString()}`,
+    '',
+    '[ INPUTS ]',
+    `Vehicle Mass      : ${document.getElementById('vehicleMass').value} kg`,
+    `Target Energy     : ${document.getElementById('targetEnergy').value} J`,
+    `Max Peak Decel.   : ${document.getElementById('maxG').value} g`,
+    `Max Mass          : ${document.getElementById('maxMass').value} kg`,
+    `Crush Efficiency  : ${document.getElementById('crushEff').value}`,
+    `Peak Factor       : ${document.getElementById('peakFactor').value}`,
+    '',
+    '[ OPTIMUM DESIGN ]',
+    `CFRP Thickness    : ${document.getElementById('rCFRP').textContent}`,
+    `Honeycomb Thick.  : ${document.getElementById('rHoney').textContent}`,
+    `Al Foam Thick.    : ${document.getElementById('rAlFoam').textContent}`,
+    `PU Foam Thick.    : ${document.getElementById('rPUFoam').textContent}`,
+    `Width             : ${document.getElementById('rWidth').textContent}`,
+    `Height            : ${document.getElementById('rHeight').textContent}`,
+    `Total Thickness   : ${document.getElementById('rTotalThick').textContent}`,
+    `Total Mass        : ${document.getElementById('rMass').textContent}`,
+    '',
+    '[ PERFORMANCE ]',
+    `Total Energy      : ${document.getElementById('rEnergy').textContent}`,
+    `Overall SEA       : ${document.getElementById('rSEA').textContent}`,
+    `Peak Force        : ${document.getElementById('rForce').textContent}`,
+    `Peak Decel.       : ${document.getElementById('rG').textContent}`,
+    `Safety Factor     : ${document.getElementById('rSafety').textContent}`,
+    `Optim. Score      : ${document.getElementById('rScore').textContent}`,
+    '',
+    '====================================================',
+    '  FORMULA BHARAT — IMPACT ATTENUATOR OPTIMIZER v1.0',
+    '====================================================',
+  ];
+  const blob = new Blob([lines.join('\n')], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'FB_Impact_Attenuator_Report.txt';
+  a.click();
+  showToast('✓ Report downloaded');
+}
+
+// Auto-run on load after launch so charts are populated with default
+window.addEventListener('DOMContentLoaded', () => {
+  // Nothing until launch
+});
+</script>
+</body>
+</html>

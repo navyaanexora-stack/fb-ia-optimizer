@@ -1,0 +1,110 @@
+{
+  "_description": "Formula Bharat Impact Attenuator Optimizer — Engineering Knowledge Base v1.0",
+
+  "materials": [
+    {
+      "name": "CFRP",
+      "full_name": "Carbon Fibre Reinforced Polymer",
+      "role": "Face sheet — structural integrity and load distribution",
+      "density_kg_m3": 1600,
+      "sea_kJ_kg": 1.15,
+      "colour_hex": "#00c8ff",
+      "thickness_range_mm": { "min": 10, "max": 40, "step": 10 },
+      "notes": "High stiffness, low SEA. Used as face sheet to distribute load evenly."
+    },
+    {
+      "name": "Honeycomb",
+      "full_name": "Aluminium Honeycomb Core",
+      "role": "Primary energy absorber — highest SEA material",
+      "density_kg_m3": 80,
+      "sea_kJ_kg": 26.30,
+      "colour_hex": "#00ff87",
+      "thickness_range_mm": { "min": 40, "max": 140, "step": 10 },
+      "notes": "Dominant energy absorber. Low density with exceptional SEA. Core of attenuator stack."
+    },
+    {
+      "name": "Al Foam",
+      "full_name": "Closed-Cell Aluminium Foam",
+      "role": "Secondary absorber — progressive crushing behaviour",
+      "density_kg_m3": 450,
+      "sea_kJ_kg": 4.77,
+      "colour_hex": "#ffd600",
+      "thickness_range_mm": { "min": 20, "max": 80, "step": 10 },
+      "notes": "Higher density than honeycomb. Stable plateau stress. Good for rear section."
+    },
+    {
+      "name": "PU Foam",
+      "full_name": "Polyurethane Foam",
+      "role": "Tertiary absorber — low-speed impact and vibration damping",
+      "density_kg_m3": 120,
+      "sea_kJ_kg": 9.20,
+      "colour_hex": "#bf5af2",
+      "thickness_range_mm": { "min": 20, "max": 80, "step": 10 },
+      "notes": "Good SEA-to-density ratio. Progressive behaviour. Acts as compliance layer."
+    }
+  ],
+
+  "vehicle": {
+    "mass_kg": 300,
+    "gravity_m_s2": 9.81,
+    "description": "Typical Formula Student vehicle total mass including driver"
+  },
+
+  "design_constraints": {
+    "target_energy_J": 12000,
+    "target_SEA_kJ_kg": 10.0,
+    "max_mass_kg": 5.0,
+    "max_peak_deceleration_g": 40,
+    "crush_efficiency": 0.80,
+    "peak_force_factor": 1.35,
+    "source": "Formula Bharat 2024 Technical Regulations — Impact Attenuator Section"
+  },
+
+  "search_space": {
+    "cfrp_thickness_mm":      { "min": 10,  "max": 40,  "step": 10 },
+    "honey_thickness_mm":     { "min": 40,  "max": 140, "step": 10 },
+    "alfoam_thickness_mm":    { "min": 20,  "max": 80,  "step": 10 },
+    "pufoam_thickness_mm":    { "min": 20,  "max": 80,  "step": 10 },
+    "width_mm":               { "min": 150, "max": 250, "step": 10 },
+    "height_mm":              { "min": 100, "max": 200, "step": 10 },
+    "total_candidates_approx": 259556
+  },
+
+  "scoring_weights": {
+    "base_score": 100,
+    "sea_penalty_per_kJ_kg_deviation": 8,
+    "energy_penalty_per_J_deviation": 0.00333,
+    "mass_penalty_per_kg": 4,
+    "g_penalty_per_g": 1,
+    "mass_constraint_bonus": 20,
+    "g_constraint_bonus": 20,
+    "description": "Higher score = better design. Penalises deviation from targets and unsafe designs."
+  },
+
+  "safety_zones": {
+    "safe":   { "peak_g_max": 35, "safety_factor_min": 1.15, "colour": "#00ff87" },
+    "risky":  { "peak_g_max": 40, "safety_factor_min": 1.00, "colour": "#ffd600" },
+    "unsafe": { "peak_g_min": 40, "safety_factor_max": 1.00, "colour": "#ff3060" }
+  },
+
+  "formula_bharat_rules_reference": {
+    "regulation": "Formula Bharat Technical Regulations",
+    "section": "T3 — Impact Attenuator and Anti-Intrusion Plate",
+    "key_requirements": [
+      "Must absorb minimum 7350 J (EV: 7350 J minimum)",
+      "Average deceleration ≤ 20 g over crush distance",
+      "Peak deceleration ≤ 40 g at any point",
+      "Must be mounted ahead of anti-intrusion plate",
+      "Minimum cross section 100mm × 100mm at vehicle attachment"
+    ],
+    "note": "Verify against current year's official regulations before competition submission"
+  },
+
+  "references": [
+    "Formula Bharat 2024 Technical Regulations",
+    "SAE International — Formula SAE Rules 2024",
+    "Ashby, M.F. — Materials Selection in Mechanical Design (4th Ed.)",
+    "Wierzbicki, T. — Crushing Analysis of Metal Honeycombs",
+    "Mines, R.A.W. — Metallic Foam Core Sandwich Structures"
+  ]
+}
